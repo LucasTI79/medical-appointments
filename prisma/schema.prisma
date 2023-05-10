@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  username  String   @unique
+  password  String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  Doctor    Doctor?
+  Patient   Patient?
+
+  @@map("users")
+}
+
+model Speciality {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String
+  createdAt   DateTime @default(now())
+  Doctor      Doctor[]
+
+  @@map("specialities")
+}
+
+model Doctor {
+  id    String @id @default(uuid())
+  email String @unique
+  crm   String @unique
+
+  user          User       @relation(fields: [user_id], references: [id])
+  user_id       String     @unique
+  speciality    Speciality @relation(fields: [speciality_id], references: [id])
+  speciality_id String
+
+  createdAt      DateTime         @default(now())
+  doctorInfo     DoctorInfo?
+  doctorSchedule DoctorSchedule[]
+  appointment    Appointment[]
+
+  @@map("doctors")
+}
+
+model DoctorInfo {
+  id        String  @id @default(uuid())
+  duration  Int
+  price     Decimal
+  doctor_id String  @unique
+  doctor    Doctor  @relation(fields: [doctor_id], references: [id])
+
+  @@map("doctor_info")
+}
+
+model Patient {
+  id       String @id @default(uuid())
+  email    String
+  document String @unique
+
+  user        User          @relation(fields: [user_id], references: [id])
+  user_id     String        @unique
+  Appointment Appointment[]
+
+  @@map("patients")
+}
+
+model DoctorSchedule {
+  id          String @id @default(uuid())
+  start_at    String
+  end_at      String
+  day_of_week Int
+  doctor_id   String
+  doctor      Doctor @relation(fields: [doctor_id], references: [id])
+
+  @@map("doctor_schedules")
+}
+
+model Appointment {
+  id          String   @id @default(uuid())
+  doctor_id   String
+  doctor      Doctor   @relation(fields: [doctor_id], references: [id])
+  patient_id  String
+  patient     Patient  @relation(fields: [patient_id], references: [id])
+  is_finished Boolean  @default(false)
+  date        DateTime
+  note        String?
+
+  @@map("appointments")
+}
